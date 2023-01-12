@@ -1,6 +1,5 @@
 name: Visit website
 on: workflow_dispatch
-
 inputs:
   url:
     description: 'The URL of the website to visit'
