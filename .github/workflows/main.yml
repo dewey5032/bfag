@@ -16,8 +16,8 @@ jobs:
         DISPLAY: :99.0
       run: |
         export MOZ_HEADLESS=1
-        apt-get update
-        apt-get install -y firefox-geckodriver xvfb
+        sudo apt-get update
+        sudo apt-get install -y firefox-geckodriver xvfb
         Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
         echo 'Starting Firefox ...'
         /usr/bin/firefox --version
