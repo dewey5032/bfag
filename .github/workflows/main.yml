@@ -1,9 +1,11 @@
-on:
-  workflow_dispatch:
-    inputs:
-      URL:
-        description: 'The URL to visit'
-        required: true
+name: Visit website
+on: workflow_dispatch
+
+inputs:
+  url:
+    description: 'The URL of the website to visit'
+    required: true
+
 jobs:
   visit:
     runs-on: windows-latest
@@ -17,9 +19,21 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: 14.x
-    - name: Install Firefox
-      run: choco install -y firefox
+    - name: Install chrome and firefox
+      run: |
+        $random=Get-Random
+        if($random -le 0.5)
+        {
+          choco install -y googlechrome
+          $browser="chrome"
+        }
+        else
+        {
+          choco install -y firefox
+          $browser="firefox"
+        }
     - name: Install geckodriver
+      if: env.browser=='firefox'
       run: |
         npm install -g geckodriver
         geckodriver --version
@@ -27,13 +41,12 @@ jobs:
       run: npm install puppeteer
     - name: Run puppeteer
       env:
-        PUPPETEER_EXECUTABLE_PATH: firefox
-        URL: ${{inputs.URL}}
+        PUPPETEER_EXECUTABLE_PATH: ${{env.browser}}
       run: |
         node -e "(async () => {
           const browser = await require('puppeteer').launch({executablePath: process.env.PUPPETEER_EXECUTABLE_PATH, headless: false});
           const page = await browser.newPage();
-          await page.goto(process.env.URL);
+          await page.goto(${{ inputs.url }});
           await new Promise(r => setTimeout(r, 1800000)); // 30 mins wait
           await browser.close();
         })();"
