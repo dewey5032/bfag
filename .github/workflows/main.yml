@@ -1,0 +1,41 @@
+on:
+  workflow_dispatch:
+    inputs:
+      URL:
+        description: 'The URL to visit'
+        required: true
+jobs:
+  visit:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        instance: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: 14.x
+    - name: Install Firefox
+      run: choco install -y firefox
+    - name: Install geckodriver
+      run: |
+        npm install -g geckodriver
+        geckodriver --version
+    - name: Install puppeteer
+      run: npm install puppeteer
+    - name: Run puppeteer
+      env:
+        PUPPETEER_EXECUTABLE_PATH: firefox
+        URL: ${{inputs.URL}}
+      run: |
+        node -e "(async () => {
+          const browser = await require('puppeteer').launch({executablePath: process.env.PUPPETEER_EXECUTABLE_PATH, headless: false});
+          const page = await browser.newPage();
+          await page.goto(process.env.URL);
+          await new Promise(r => setTimeout(r, 1800000)); // 30 mins wait
+          await browser.close();
+        })();"
+    - name: Check output
+      run: echo "Visit website job has finished."
