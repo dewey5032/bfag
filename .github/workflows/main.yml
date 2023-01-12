@@ -1,56 +1,28 @@
-name: Visit website
-on: 
+name: Visit website using Firefox
+
+on:
   workflow_dispatch:
     inputs:
       url:
-        description: 'The URL of the website to visit'
+        description: "Enter the URL of the website to visit"
         required: true
 
 jobs:
-  visit:
-    runs-on: windows-latest
+  visit-website:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
+        url: ${{ inputs.url }}
         instance: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Install Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: 14.x
-    - name: Install chrome and firefox
-      run: |
-        $random=Get-Random
-        if($random -le 0.5)
-        {
-          choco install -y googlechrome
-          $browser="chrome"
-        }
-        else
-        {
-          choco install -y firefox
-          $browser="firefox"
-        }
-    - name: Install geckodriver
-      if: env.browser=='firefox'
-      run: |
-        npm install -g geckodriver
-        geckodriver --version
-    - name: Install puppeteer
-      run: npm install puppeteer
-    - name: Run puppeteer
+    - name: Use Firefox web driver to visit website
       env:
-        PUPPETEER_EXECUTABLE_PATH: ${{env.browser}}
-        URL: ${{ env.URL}}
+        DISPLAY: :99.0
       run: |
-        node -e "(async () => {
-          const browser = await require('puppeteer').launch({executablePath: process.env.PUPPETEER_EXECUTABLE_PATH, headless: false});
-          const page = await browser.newPage();
-          await page.goto(process.env.URL);
-          await new Promise(r => setTimeout(r, 1800000)); // 30 mins wait
-          await browser.close();
-        })();"
-    - name: Check output
-      run: echo "Visit website job has finished."
-
+        export MOZ_HEADLESS=1
+        apt-get update
+        apt-get install -y firefox-geckodriver xvfb
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        echo 'Starting Firefox ...'
+        /usr/bin/firefox --version
+        /usr/bin/firefox --headless --no-remote --marionette ${{ matrix.url }}
